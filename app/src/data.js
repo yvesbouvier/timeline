@@ -5,12 +5,12 @@
         .service('dataService', ['$q', dataService]);
 
     /**
-     * Person DataService
+     * Item DataService
      *
      * @returns {{loadAll: Function}}
      * @constructor
      */
-    function PersonService($q){
+    function ItemService($q){
 
 
         // Promise-based API

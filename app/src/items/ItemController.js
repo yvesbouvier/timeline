@@ -1,10 +1,10 @@
 (function(){
 
   angular
-       .module('person')
-       .controller('PersonController', [
-          'personService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$routeParams',
-          PersonController
+       .module('item')
+       .controller('ItemController', [
+          'itemService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$routeParams',
+          ItemController
        ]);
 
   /**
@@ -14,13 +14,13 @@
    * @param avatarsService
    * @constructor
    */
-  function PersonController(personService, $mdSidenav, $mdBottomSheet, $log, $q, $routeParams) {
+  function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q, $routeParams) {
       var self = this;
       self.selected = null;
       self.people = [];
       self.places = [];
       self.events = [];
-      self.selectPerson = selectPerson;
+      self.selectItem = selectItem;
       self.toggleList = togglePeopleList;
       self.showContactOptions = showContactOptions;
       self.typePage = $routeParams['type'];
@@ -28,20 +28,20 @@
 
 
       if (self.typePage == 'events') {
-          personService.
+          itemService.
               loadAllEvents()
               .then(function (events) {
                   self.items = [].concat(events);
                   self.selected = self.items[0];
               });
       } else if (self.typePage == 'places') {
-              personService.loadAllPlaces()
+              itemService.loadAllPlaces()
                   .then(function (places) {
                       self.items = [].concat(places);
                       self.selected = self.items[0];
                   });
       } else if (self.typePage == 'people') {
-              personService.loadAllPeople()
+              itemService.loadAllPeople()
                   .then(function (people) {
                       self.items = [].concat(people);
                       self.selected = self.items[0];
@@ -70,19 +70,19 @@
      * Select the current avatars
      * @param menuId
      */
-    function selectPerson ( person ) {
-      self.selected = angular.isNumber(person) ? $scope.items[person] : person;
+    function selectItem ( item ) {
+      self.selected = angular.isNumber(item) ? $scope.items[item] : item;
     }
 
     /**
      * Show the bottom sheet
      */
     function showContactOptions($event) {
-        var person = self.selected;
+        var item = self.selected;
 
         return $mdBottomSheet.show({
           parent: angular.element(document.getElementById('content')),
-          templateUrl: './src/people/view/contactSheet.html',
+          templateUrl: './src/items/view/contactSheet.html',
           controller: [ '$mdBottomSheet', ContactPanelController],
           controllerAs: "cp",
           bindToController : true,
@@ -95,7 +95,7 @@
          * Bottom Sheet controller for the Avatar Actions
          */
         function ContactPanelController( $mdBottomSheet ) {
-          this.person = person;
+          this.item = item;
           this.actions = [
             { name: 'Phone'       , icon: 'phone'       , icon_url: 'assets/svg/phone.svg'},
             { name: 'Twitter'     , icon: 'twitter'     , icon_url: 'assets/svg/twitter.svg'},

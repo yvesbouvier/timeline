@@ -1,4 +1,4 @@
-<div  ng-controller="PersonController as ul" flex layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
+<div  ng-controller="ItemController as ul" flex layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
 
     <md-toolbar layout="row" class="md-whiteframe-z1">
         <md-button class="menu" hide-gt-sm ng-click="ul.toggleList()" aria-label="Show People List">
@@ -15,7 +15,7 @@
                     <div class="md-list-item-text" layout="column">
                         <h3>{{it.name}}</h3>
                          <p>{{it.content}}</p>
-                        <md-button ng-click="ul.selectPerson(it)" ng-class="{'selected' : it === ul.selected }">more</md-button>
+                        <md-button ng-click="ul.selectItem(it)" ng-class="{'selected' : it === ul.selected }">more</md-button>
                     </div>
             </md-list-item>
         </md-list>

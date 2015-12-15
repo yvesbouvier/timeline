@@ -1,5 +1,5 @@
 angular
-    .module('starterApp', ['ngMaterial', 'ngRoute', 'person'])
+    .module('starterApp', ['ngMaterial', 'ngRoute', 'item'])
     .config(function($mdThemingProvider, $mdIconProvider, $routeProvider){
 
         $mdIconProvider
@@ -15,7 +15,7 @@ angular
 
         $routeProvider.
         when('/item/:type', {
-            templateUrl: '/src/people/view/main.ng',
-            controller: 'PersonController'});
+            templateUrl: '/src/items/view/main.ng',
+            controller: 'ItemController'});
 
     });

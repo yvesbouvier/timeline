@@ -1,18 +1,18 @@
 (function(){
   'use strict';
 
-  angular.module('person')
-         .service('personService', ['$q', PersonService]);
+  angular.module('item')
+         .service('itemService', ['$q', ItemService]);
 
   /**
-   * Person DataService
+   * Item DataService
    * Uses embedded, hard-coded data model; acts asynchronously to simulate
    * remote data service call(s).
    *
    * @returns {{loadAll: Function}}
    * @constructor
    */
-  function PersonService($q) {
+  function ItemService($q) {
     var events  = [
       {
         name: 'Police finds the car',
