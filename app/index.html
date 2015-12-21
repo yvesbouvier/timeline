@@ -21,17 +21,72 @@
     <script src="./bower_components/angular-route/angular-route.js"></script>
     <script src="./bower_components/angular-animate/angular-animate.js"></script>
     <script src="./bower_components/angular-aria/angular-aria.js"></script>
+
+    <script src='./bower_components/lodash/lodash.min.js'></script>
+    <script src='./bower_components/angular-simple-logger/dist/angular-simple-logger.js'></script>
+    <script src='./bower_components/angular-google-maps/dist/angular-google-maps.js'></script>
     <script type="text/javascript" src="./bower_components/angular-material/angular-material.js"></script>
     <script src="./src/app.js"></script>
     <script src="src/items/Item.js"></script>
     <script src="src/items/ItemController.js"></script>
     <script src="src/items/ItemService.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons+Extended" rel="stylesheet">
+    <style type="text/css">
+      html, body, #map_canvas {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+      }
+
+      #map_canvas {
+        position: relative;
+        height: 300px;
+      }
+
+      .angular-google-map-container {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+      }
+
+      .search-box {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 300px;
+        margin-top: 10px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      md-list {
+        background: white;
+        z-index: 10;
+        margin: 10px;
+        overflow-y: auto;
+      }
+
+
+
+    </style>
   </head>
 
   <body ng-app="starterApp" layout="row" ng-cloak>
     <md-sidenav class="site-sidenav md-sidenav-left md-whiteframe-z2"
                   md-component-id="left" layout="column"
-                  md-is-locked-open="$mdMedia('gt-sm')">
+                  >
 
       <md-toolbar class="md-whiteframe-z1">
         <h1>AppName</h1>
@@ -49,10 +104,10 @@
         </md-list-item>
         <md-list-item>
           <a href="#">Home</a>
-        </md-list-item>
+           </md-list-item>
       </md-list>
     </md-sidenav>
+    <div ng-view style="width:100%"></div>
 
-    <div ng-view></div>
   </body>
 </html>

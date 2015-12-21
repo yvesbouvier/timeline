@@ -1,37 +1,78 @@
-<div  ng-controller="ItemController as ul" flex layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
+<div  ng-controller="ItemController as ul" ng-switch="ul.typePage"  layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
+
+    <script type="text/ng-template" id="searchbox.tpl.html">
+        <input type="text" id="searchbox" class="search-box" style="right:10px;left:initial!important;" placeholder="Search for a place">
+    </script>
 
     <md-toolbar layout="row" class="md-whiteframe-z1">
-        <md-button class="menu" hide-gt-sm ng-click="ul.toggleList()" aria-label="Show People List">
+        <md-button class="menu" ng-click="ul.toggleList()" aria-label="Show People List">
             <md-icon md-svg-icon="menu" ></md-icon>
         </md-button>
-        <h1>Angular Material - Starter App</h1>
+        <h1 ng-switch-when="places">Places ({{ul.items.length}})</h1>
+        <h1 ng-switch-when="events">Events</h1>
+        <h1 ng-switch-when="people">People</h1>
+        <md-button class="md-icon-button" ng-click="ul.addItem($event, ul.typePage)">
+            <md-icon md-menu-align-target style="margin: auto 3px auto 0;"><i class="material-icons-extended">add</i></md-icon>
+        </md-button>
     </md-toolbar>
+<div ng-switch-when="places" id="map_canvas" style="height: 300px;">
+    <ui-gmap-google-map id="mmm" events="ul.eventsMap"   ng-show="ul.displayMap" center="ul.map.center" style="height:300px;" zoom="ul.map.zoom">
+        <ui-gmap-markers models="ul.markers" coords="'self'" icon="'icon'">
+        </ui-gmap-markers>
+        <ui-gmap-search-box events="ul.searchbox.events" options="ul.searchbox.options" template="ul.searchbox.template">
+        </ui-gmap-search-box>
+    </ui-gmap-google-map>
+</div>
+    <md-list>
+            <md-list-item layout="column" layout-align="center left" ng-repeat="it in ul.items | filter:search">
+                <div layout-margin>
+                    <div layout="row">
+                        <div>
+                            <img class="md-avatar" ng-src="{{it.image}}"/>
+                        </div>
+                        <div flex>
+                            <h3>{{it.name}}</h3>
+                        </div>
+                        <section layout-align="end" layout="row">
 
-
-    <md-content flex id="content" layout="row">
-        <md-list flex>
-            <md-list-item layout="row" ng-repeat="it in ul.items">
-                    <img class="md-avatar" src="https://scontent-lax3-1.xx.fbcdn.net/hprofile-xtf1/v/t1.0-1/p320x320/12002921_10153702663366336_2262597674140915517_n.jpg?oh=19ac4f053ce7a15178c497d728b4d730&oe=5717691C"/>
-                    <div class="md-list-item-text" layout="column">
-                        <h3>{{it.name}}</h3>
-                         <p>{{it.content}}</p>
-                        <md-button ng-click="ul.selectItem(it)" ng-class="{'selected' : it === ul.selected }">more</md-button>
+                            <md-menu style="padding:0;">
+                                <md-button class="md-icon-button" aria-label="Open phone interactions menu" ng-click="ul.openMenu($mdOpenMenu, $event)">
+                                    <md-icon md-menu-align-target style="margin: auto 3px auto 0;"><i class="material-icons-extended">visibility</i></md-icon>
+                                </md-button>
+                                <md-menu-content>
+                                    <md-menu-item width="4">
+                                        <md-button ng-click="ul.addLink($event)">
+                                            Link
+                                        </md-button>
+                                        <md-button ng-click="ul.addLink($event)">
+                                            Link
+                                        </md-button>
+                                        <md-button ng-click="ul.addLink($event)">
+                                            Link
+                                        </md-button>
+                                        <md-button ng-click="ul.addLink($event)">
+                                            Link
+                                        </md-button>
+                                    </md-menu-item>
+                                </md-menu-content>
+                            </md-menu>
+                            <md-button class="md-icon-button" ng-click="ul.selectItem(it)">
+                                <md-icon md-menu-align-target style="margin: auto 3px auto 0;"><i class="material-icons-extended">info</i></md-icon>
+                            </md-button>
+                            <md-button class="md-icon-button md-raised" ng-click="ul.editItem(it, $event)">
+                                <md-icon md-menu-align-target style="margin: auto 3px auto 0;"><i class="material-icons-extended">edit</i></md-icon>
+                            </md-button>
+                        </section>
                     </div>
+                    <div layout="column">
+                        <div layout-margin>{{it.content}}</div>
+                        <div layout-margin>{{it.formatted_address}}</div>
+                        <md-progress-linear ng-if="it.percent.fact" md-mode="determinate" value="{{it.percent.fact}}"></md-progress-linear>
+                    </div>
+
+                </div>
+                <md-divider ng-if="!$last"></md-divider>
             </md-list-item>
         </md-list>
 
-        <md-content flex>
-
-            <md-icon md-svg-icon="{{ul.selected.avatar}}" class="avatar"></md-icon>
-            <h2>{{ul.selected.name}}</h2>
-            <p>{{ul.selected.content}}</p>
-
-            <md-button class="contact" md-no-ink ng-click="ul.showContactOptions($event)" aria-label="Contact User">
-                <md-tooltip>Contact {{ ul.selected.name }}</md-tooltip>
-                <md-icon md-svg-icon="share"></md-icon>
-            </md-button>
-        </md-content>
-
-
-    </md-content>
 </div>
