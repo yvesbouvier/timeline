@@ -24,6 +24,7 @@
     self.addItem = addItem;
     self.openMenu = openMenu;
     self.toggleList = togglePeopleList;
+    self.showContactOptions = showContactOptions;
     self.getMarkersFromItems = getMarkersFromItems;
     self.getItemsFromMapsPlaces = getItemsFromMapsPlaces;
     self.initPlaces = initPlaces;
@@ -185,6 +186,42 @@
       self.originatorEv = ev;
       $mdOpenMenu(ev);
     };
+
+    /**
+     * Show the bottom sheet
+     */
+    function showContactOptions($event) {
+      var item = self.selected;
+      return $mdBottomSheet.show({
+        parent: angular.element(document.getElementById('content')),
+        templateUrl: './src/items/view/contactSheet.html',
+        controller: ['$mdBottomSheet', ContactPanelController],
+        controllerAs: "cp",
+        bindToController: true,
+        targetEvent: $event
+      }).then(function (clickedItem) {
+        clickedItem && $log.debug(clickedItem.name + ' clicked!');
+      });
+
+
+    }
+
+    /**
+     * Bottom Sheet controller for the Avatar Actions
+     */
+    function ContactPanelController($mdBottomSheet) {
+      this.item = item;
+      this.actions = [
+        {name: 'Phone', icon: 'phone', icon_url: 'assets/svg/phone.svg'},
+        {name: 'Twitter', icon: 'twitter', icon_url: 'assets/svg/twitter.svg'},
+        {name: 'Google+', icon: 'google_plus', icon_url: 'assets/svg/google_plus.svg'},
+        {name: 'Hangout', icon: 'hangouts', icon_url: 'assets/svg/hangouts.svg'}
+      ];
+      this.submitContact = function (action) {
+        $mdBottomSheet.hide(action);
+      };
+    }
+
 
     function DialogController($scope, $mdDialog) {
       $scope.hide = function () {
