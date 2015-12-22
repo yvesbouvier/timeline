@@ -159,7 +159,7 @@
       $mdDialog.show({
           controller: DialogController,
           controllerAs: 'ctrl',
-          templateUrl: './src/items/view/itemDialog.html',
+          templateUrl: './src/items/view/itemDialog.ng',
           parent: angular.element(document.body),
           locals: {parent: itemService, item: item},
           targetEvent: ev,
