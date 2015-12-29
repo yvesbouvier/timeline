@@ -39,10 +39,6 @@
         margin: 0px;
       }
 
-      #map_canvas {
-        position: relative;
-        height: 300px;
-      }
 
       .angular-google-map-container {
         position: absolute;
@@ -80,34 +76,13 @@
 
 
 
+
+
     </style>
   </head>
 
   <body ng-app="starterApp" layout="row" ng-cloak>
-    <md-sidenav class="site-sidenav md-sidenav-left md-whiteframe-z2"
-                  md-component-id="left" layout="column"
-                  >
 
-      <md-toolbar class="md-whiteframe-z1">
-        <h1>AppName</h1>
-      </md-toolbar>
-      <md-subheader class="md-no-sticky">Type</md-subheader>
-      <md-list>
-        <md-list-item>
-          <a href="#item/people">People</a>
-        </md-list-item>
-        <md-list-item>
-          <a href="#item/places">Places</a>
-        </md-list-item>
-        <md-list-item>
-          <a href="#item/events">Events</a>
-        </md-list-item>
-        <md-list-item>
-          <a href="#">Home</a>
-           </md-list-item>
-      </md-list>
-    </md-sidenav>
     <div ng-view style="width:100%"></div>
-
   </body>
 </html>

@@ -4,7 +4,7 @@
     .module('item')
     .controller('ItemController', [
       'itemService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$routeParams',
-      '$mdDialog', 'uiGmapGoogleMapApi', 'uiGmapIsReady', ItemController
+      '$mdDialog', 'uiGmapGoogleMapApi', 'uiGmapIsReady', '$rootScope', ItemController
     ]);
 
   /**
@@ -15,7 +15,7 @@
    * @constructor
    */
   function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q, $routeParams,
-                          $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady) {
+                          $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope) {
     var self = this;
     // Open menu origin.
     self.originatorEv = null;
@@ -25,107 +25,181 @@
     self.openMenu = openMenu;
     self.toggleList = togglePeopleList;
     self.showContactOptions = showContactOptions;
-    self.getMarkersFromItems = getMarkersFromItems;
     self.getItemsFromMapsPlaces = getItemsFromMapsPlaces;
     self.initPlaces = initPlaces;
+    self.centerToMap = centerToMap;
+    self.loadInitialMap = loadInitialMap;
+    self.changeSelectedState = changeSelectedState;
+    self.scope = $rootScope;
 
     self.typePage = $routeParams['type'];
 
-    if (self.typePage == 'events') {
-      itemService.
-        loadAllEvents()
-        .then(function (events) {
-          self.items = [].concat(events);
-        });
-    } else if (self.typePage == 'places') {
-      itemService.loadAllPlaces()
+
+
+
+    uiGmapGoogleMapApi.then(function(maps) {
+      self.loadInitialMap(maps);
+    });
+
+
+
+
+    if (self.typePage == 'places') {
+      itemService.loadAllItems()
         .then(this.initPlaces)
         .then(
           function (instances) {
             self.instanceMap = instances[0].map;
           }
         );
-    } else if (self.typePage == 'people') {
-      itemService.loadAllPeople()
-        .then(function (people) {
-          self.items = [].concat(people);
+    } else {
+      itemService.loadAllItems()
+        .then(function (items) {
+          self.items = [].concat(items);
         });
+      self.eventsMap = {
+        bounds_changed: function (searchBox) {
+        }
+      };
+    }
+
+    function changeSelectedState(item, changeFirst) {
+      centerToMap(item);
+      console.log('changeSelectedState-', item);
+      item.selected = (item.selected === undefined)? false: item.selected;
+      if(changeFirst) { item.selected = !item.selected; }
+      console.log('changeSelectedState', item.selected);
+       if(item.options) {
+         if (item.selected) {
+           item.options = {
+             'draggable': true,
+             'icon': '/assets/icons_map/Map-Marker-Push-Pin-1-Left-Azure-icon-32.png'
+           };
+         } else {
+           item.options = {
+             'draggable': false,
+             'icon': '/assets/icons_map/Map-Marker-Push-Pin-1-Left-Pink-icon-32.png'
+           };
+         }
+
+
+      }
+      //self.items[index] = item;
+      if(changeFirst) {
+        self.scope.$apply();
+      }
+    }
+
+
+    function loadInitialMap(maps) {
+        self.map = {
+        center: {latitude: 34.18150377077659, longitude: -118.592517321875}, zoom: 12};
+
+      uiGmapIsReady.promise()
+        .then(function (map_instances) {
+          var map2 = map_instances[0].map;            // get map object through array object returned by uiGmapIsReady promise
+          console.log(map2.getBounds());
+
+
+          var bounds = new maps.LatLngBounds(map2.getBounds().getNorthEast(), map2.getBounds().getSouthWest());
+
+          self.searchbox.events = {
+            places_changed: function (searchBox) {
+              var places = searchBox.getPlaces();
+              self.items = getItemsFromMapsPlaces(places);
+
+              self.map = {
+                center: {latitude: places[0].geometry.location.lat(), longitude: places[0].geometry.location.lng()}, zoom: 15};
+            }
+          };
+
+          var center = bounds.getCenter();
+
+
+
+          var searchLatLng = new google.maps.LatLng(
+            34.18150377077659,
+            -118.592517321875);
+
+          var mapOptions = {
+            center: searchLatLng,
+            zoom: 12,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          };
+
+
+
+          var options = {bounds: map2.getBounds()};
+
+
+          self.eventsMap = {
+            bounds_changed: function (searchBox) {
+
+              if (self.instanceMap) {
+                var options = {bounds: self.instanceMap.getBounds()};
+                self.searchbox.options = options;
+              }
+            }
+          };
+          self.searchbox.options = options;
+
+          // Map is ready to display.
+          self.displayMap = true;
+          // Set markers
+
+
+        });
+
+
+
+
+
+
+
+
+
+
     }
 
 
     function initPlaces(places) {
       self.items = [].concat(places);
-      self.markers = self.getMarkersFromItems(self.items);
       var events = {
         places_changed: function (searchBox) {
           var places = searchBox.getPlaces();
           self.items = getItemsFromMapsPlaces(places);
-          // Set markers
-          self.markers = self.getMarkersFromItems(self.items);
-          console.log(self.markers);
         }
       };
 
       self.searchbox = {template: 'searchbox.tpl.html', events: events};
 
-      uiGmapGoogleMapApi.then(function (maps) {
-        var bounds = new maps.LatLngBounds(
-          new maps.LatLng(37.4054511, -121.2402224),
-          new maps.LatLng(37.4052011, -121.2402204)
-        );
 
-        var options = {bounds: bounds};
-
-        self.searchbox.events = {
-          places_changed: function (searchBox) {
-            var places = searchBox.getPlaces();
-            console.log(searchBox);
-            self.items = getItemsFromMapsPlaces(places);
-            self.markers = self.getMarkersFromItems(self.items);
-
-            self.map = {center: {latitude: places[0].geometry.location.lat(), longitude: places[0].geometry.location.lng()}, zoom: 8};
-
-
-
-          }
-        };
-
-        var center = bounds.getCenter();
-        self.map = {center: {latitude: center.lat(), longitude: center.lng()}, zoom: 8};
-
-        self.eventsMap = {
-          bounds_changed: function (searchBox) {
-
-            if (self.instanceMap) {
-              var options = {bounds: self.instanceMap.getBounds()};
-              self.searchbox.options = options;
-            }
-          }
-        };
-        self.searchbox.options = options;
-
-        // Map is ready to display.
-        self.displayMap = true;
-        // Set markers
-        self.markers = self.getMarkersFromItems(self.items);
-      });
 
       return uiGmapIsReady.promise(1);
 
     }
 
+    function centerToMap(item) {
+      self.map = {
+        center: {latitude: item.coords.latitude, longitude: item.coords.longitude}};
+    }
 
     function getItemsFromMapsPlaces(places) {
       var items = [];
-      console.log(places);
       for (var i = 0; i < places.length; i++) {
         var place = places[i];
         var item = {
+          id: i.toString(),
           name: place['name'],
+          type: 'places',
           formatted_address: place['formatted_address'],
           coords: {
             latitude: place.geometry.location.lat(),
             longitude: place.geometry.location.lng(),
+          },
+          options: {
+          'draggable': false,
+          'icon' : '/assets/icons_map/Map-Marker-Push-Pin-1-Left-Pink-icon-32.png'
           },
           content: null
         };
@@ -137,15 +211,9 @@
       return items;
     }
 
-    function getMarkersFromItems(items) {
-      var markers = [];
-      for (var i = 0; i < items.length; i++) {
-        var marker = items[i]['coords'];
-        marker['id'] = i.toString();
-        markers.push(marker);
-      }
-      return markers;
-    }
+
+
+
 
 
     function togglePeopleList() {
