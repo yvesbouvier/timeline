@@ -5,7 +5,7 @@
     .controller('ItemController', [
       'itemService', '$mdSidenav', '$mdBottomSheet', '$log', '$q',
       '$routeParams', '$mdDialog', 'uiGmapGoogleMapApi', 'uiGmapIsReady',
-      '$rootScope', ItemController
+      '$rootScope', '$timeout', ItemController
     ]);
 
   /**
@@ -16,7 +16,7 @@
    * @constructor
    */
   function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q,
-      $routeParams, $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope) {
+      $routeParams, $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope, $timeout) {
     var self = this;
     // Open menu origin.
     self.originatorEv = null;
@@ -35,6 +35,7 @@
     self.processResults = processResults;
     self.searchPlaces = searchPlaces;
 
+    self.timeout = $timeout;
     self.typePage = $routeParams['type'];
 
 
@@ -67,8 +68,6 @@
     }
 
     function changeSelectedState(item, changeFirst) {
-
-      console.log('changeSelectedState-', item);
       item.selected = (item.selected === undefined)? false: item.selected;
       if(changeFirst) { item.selected = !item.selected; }
       if (item.coords && item.selected) {
@@ -188,12 +187,16 @@
     }
 
     function getItemsFromMapsPlaces(places, items) {
+      var service = new google.maps.places.PlacesService(self.instanceMap);
       for (var i = 0; i < places.length; i++) {
         var place = places[i];
+        console.log(place);
         var item = {
           key: i.toString(),
           name: place['name'],
+          formatted_phone_number: place['formatted_phone_number'],
           type: 'places',
+          types: place['types'],
           formatted_address: place['formatted_address'],
           coords: {
             latitude: place.geometry.location.lat(),
@@ -209,11 +212,13 @@
           item['image'] = place.photos[0].getUrl({'maxWidth': 400, 'maxHeight': 400});
         }
 
-        var service = new google.maps.places.PlacesService(self.instanceMap);
 
-        var t = function(item) {
+
+        var t = function(item, place_id, i) {
+          self.timeout(function() {
+          console.log(place_id);
           service.getDetails({
-            placeId: place.place_id
+            placeId: place_id
           }, function (place, status) {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
               item['formatted_phone_number'] = place['formatted_phone_number'];
@@ -221,12 +226,18 @@
               item['opening_hours'] = place['opening_hours'];
               item['url'] = place['url'];
               item['types'] = place['types'];
+              console.log('in');
+            } else {
+              console.log('out');
             }
+            items.push(item);
           });
-        };
-        t(item);
 
-        items.push(item);
+          }, 300 * i);
+        };
+         t(item, place.place_id, i);
+
+
       }
       return items;
     }

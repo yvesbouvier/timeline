@@ -36,7 +36,8 @@
         <md-content style="height: 600px; overflow-y: auto;">
         <md-list>
             <md-list-item layout="column" layout-align="center left"
-                          ng-repeat="it in ul.items|filter:{type:ul.typePage}">
+                          ng-repeat="it in ul.items|filter:{type:ul.typePage} track by $index">
+
                 <div>
                 <div layout="column">
                     <md-progress-linear ng-if="it.percent.fact"
