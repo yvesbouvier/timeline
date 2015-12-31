@@ -77,10 +77,10 @@
             </md-tabs>
         </md-dialog-content>
         <md-dialog-actions layout="row">
-            <md-button ng-click="previous()" class="md-default">
+            <md-button ng-if="ctrl.indexItem!=-1" ng-click="previous()" class="md-default">
                 Previous
             </md-button>
-            <md-button ng-click="next()" class="md-default">
+            <md-button ng-if="ctrl.indexItem!=-1" ng-click="next()" class="md-default">
                 Next
             </md-button>
             <span flex></span>

@@ -34,6 +34,8 @@
     self.updateBounds = updateBounds;
     self.processResults = processResults;
     self.searchPlaces = searchPlaces;
+    self.search = search;
+    self.initAutocomplete = initAutocomplete;
 
     self.timeout = $timeout;
     self.typePage = $routeParams['type'];
@@ -48,24 +50,7 @@
 
 
 
-    if (self.typePage == 'places') {
-      itemService.loadAllItems()
-        .then(this.initPlaces)
-        .then(
-          function (instances) {
-            self.instanceMap = instances[0].map;
-          }
-        );
-    } else {
-      itemService.loadAllItems()
-        .then(function (items) {
-          self.items = [].concat(items);
-        });
-      self.eventsMap = {
-        bounds_changed: function (searchBox) {
-        }
-      };
-    }
+
 
     function changeSelectedState(item, changeFirst) {
       item.selected = (item.selected === undefined)? false: item.selected;
@@ -96,7 +81,7 @@
 
     function updateBounds() {
       var options = {bounds: self.instanceMap.getBounds()};
-      self.searchbox.options = options;
+      //self.searchbox.options = options;
     }
 
     function loadInitialMap(maps) {
@@ -110,8 +95,15 @@
           updateBounds();
           // Updates search bounds on moving the map.
           maps.event.addListener(self.instanceMap, 'idle', updateBounds);
+          self.initAutocomplete();
+          itemService.loadAllItems()
+                .then(function(items) {
+                  self.items = items;
 
-
+                  if (self.typePage == 'places') {
+                    self.initPlaces(self.items);
+                  }
+                });
         });
 
 
@@ -125,16 +117,30 @@
 
 
 
+
     }
 
-    function searchPlaces(types) {
+    function searchPlaces(types, keyword) {
       console.log(types);
       var service = new google.maps.places.PlacesService(self.instanceMap);
       var center = self.instanceMap.getCenter();
-      console.log(center);
       service.nearbySearch({
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
+        keyword: keyword,
+        radius: 3000,
+      }, self.processResults);
+
+    }
+
+
+    function search(keyword) {
+      var service = new google.maps.places.PlacesService(self.instanceMap);
+      var center = self.instanceMap.getCenter();
+      service.nearbySearch({
+        location: {lat: center.lat(), lng: center.lng()},
+        types: types,
+        keyword: keyword,
         radius: 3000,
       }, self.processResults);
 
@@ -145,7 +151,15 @@
       if (status !== google.maps.places.PlacesServiceStatus.OK) {
         return;
       } else {
+        var service = new google.maps.places.PlacesService(self.instanceMap);
+        var infoWindow = new google.maps.InfoWindow();
+
         self.items = getItemsFromMapsPlaces(results, self.items);
+        for (var i=0; i < self.items.length; i++) {
+          createMarker(self.items[i]);
+        }
+
+
 
         if (pagination.hasNextPage) {
           var moreButton = document.getElementById('more');
@@ -161,61 +175,80 @@
     }
 
 
-    function initPlaces(places) {
-      self.items = [].concat(places);
-      var events = {
-        places_changed: function (searchBox) {
-          var places = searchBox.getPlaces();
-          self.items = getItemsFromMapsPlaces(places, []);
-          self.map = {
-            center: {latitude: places[0].geometry.location.lat(),
-              longitude: places[0].geometry.location.lng()}, zoom: 15};
-        }
-      };
+    function createMarker(item) {
+      console.log(self.instanceMap);
+      if(item.coords) {
+        var marker = new google.maps.Marker({
+          map: self.instanceMap,
+          position: {lat: item.coords.latitude, lng: item.coords.longitude},
+          icon: {
+            url: 'http://maps.gstatic.com/mapfiles/circle.png',
+            anchor: new google.maps.Point(20, 20),
+            scaledSize: new google.maps.Size(10, 17)
+          },
+          original: item.original
+        });
 
-      self.searchbox = {template: 'searchbox.tpl.html', events: events};
-
-
-
-      return uiGmapIsReady.promise(1);
-
+        google.maps.event.addListener(marker, 'click', function() {
+          infoWindow.setContent(item.name);
+          infoWindow.open(self.instanceMap, this);
+          self.editItem(item, null, -1);
+        });
+      }
     }
+
+    function initPlaces(places) {
+
+      for (var i=0; i < places.length; i++) {
+        console.log(places[i]);
+        createMarker(places[i]);
+      }
+
+    };
 
     function centerToMap(item) {
       self.map = {
         center: {latitude: item.coords.latitude, longitude: item.coords.longitude}};
     }
 
-    function getItemsFromMapsPlaces(places, items) {
-      var service = new google.maps.places.PlacesService(self.instanceMap);
-      for (var i = 0; i < places.length; i++) {
-        var place = places[i];
-        console.log(place);
-        var item = {
-          key: i.toString(),
-          name: place['name'],
-          formatted_phone_number: place['formatted_phone_number'],
-          type: 'places',
-          types: place['types'],
-          formatted_address: place['formatted_address'],
-          coords: {
-            latitude: place.geometry.location.lat(),
-            longitude: place.geometry.location.lng(),
-          },
-          options: {
+    function createPlace(place) {
+      console.log(place.geometry.location.lat());
+      var item = {
+        key: place['place_id'],
+        name: place['name'],
+        place_id: place['place_id'],
+        formatted_phone_number: place['formatted_phone_number'],
+        type: 'places',
+        types: place['types'],
+        formatted_address: place['formatted_address'],
+        coords: {
+          latitude: place.geometry.location.lat(),
+          longitude: place.geometry.location.lng(),
+        },
+        geometry: place.geometry,
+        options: {
           'draggable': false,
           'icon' : '/assets/icons_map/Map-Marker-Push-Pin-1-Left-Pink-icon-32.png'
-          },
-          content: null
-        };
-        if (place.photos) {
-          item['image'] = place.photos[0].getUrl({'maxWidth': 400, 'maxHeight': 400});
-        }
+        },
+        content: null,
+        original: place
+      };
+      if (place.photos) {
+        item['image'] = place.photos[0].getUrl({'maxWidth': 400, 'maxHeight': 400});
+      }
+      return item;
+    }
+
+    function getItemsFromMapsPlaces(places, items) {
+      var newItems = items;
+      var service = new google.maps.places.PlacesService(self.instanceMap);
+      for (var i = 0; i < places.length; i++) {
 
 
+        newItems.push(createPlace(places[i]));
+        /**
+        self.timeout(function(item, place_id, i) {
 
-        var t = function(item, place_id, i) {
-          self.timeout(function() {
           console.log(place_id);
           service.getDetails({
             placeId: place_id
@@ -233,13 +266,16 @@
             items.push(item);
           });
 
-          }, 300 * i);
-        };
-         t(item, place.place_id, i);
+          }(item, place.place_id, i), 100 * i);
 
+         //t(item, place.place_id, i);
+
+         **/
 
       }
-      return items;
+      console.log(newItems);
+      //self.items = newItems;
+      return newItems;
     }
 
 
@@ -331,6 +367,72 @@
         $scope.initStreetViewTab();
       };
 
+    }
+
+    function clearSearchResults() {
+      self.items = [];
+    }
+
+    // This example adds a search box to a map, using the Google Place Autocomplete
+// feature. People can enter geographical searches. The search box will return a
+// pick list containing a mix of places and predicted search terms.
+
+    function initAutocomplete() {
+
+      // Create the search box and link it to the UI element.
+      var input = document.getElementById('search-box');
+      var searchBox = new google.maps.places.SearchBox(input);
+      //self.instanceMap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+      // Bias the SearchBox results towards current map's viewport.
+      self.instanceMap.addListener('bounds_changed', function() {
+        searchBox.setBounds(self.instanceMap.getBounds());
+      });
+
+      var markers = [];
+      // Listen for the event fired when the user selects a prediction and retrieve
+      // more details for that place.
+      searchBox.addListener('places_changed', function() {
+        var places = searchBox.getPlaces();
+
+        if (places.length == 0) {
+          return;
+        }
+
+        // Clear out the old markers.
+        markers.forEach(function(marker) {
+          marker.setMap(null);
+        });
+        markers = [];
+
+        // For each place, get the icon, name and location.
+        var bounds = new google.maps.LatLngBounds();
+        places.forEach(function(place) {
+          var icon = {
+            url: place.icon,
+            size: new google.maps.Size(71, 71),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(17, 34),
+            scaledSize: new google.maps.Size(25, 25)
+          };
+
+          // Create a marker for each place.
+          markers.push(new google.maps.Marker({
+            map: self.instanceMap,
+            icon: icon,
+            title: place.name,
+            position: place.geometry.location
+          }));
+
+          if (place.geometry.viewport) {
+            // Only geocodes have viewport.
+            bounds.union(place.geometry.viewport);
+          } else {
+            bounds.extend(place.geometry.location);
+          }
+        });
+        self.instanceMap.fitBounds(bounds);
+      });
     }
 
   }
