@@ -41,6 +41,7 @@
     self.typePage = $routeParams['type'];
 
 
+    self.placeTypes = itemService.place_types;
 
 
     uiGmapGoogleMapApi.then(function(maps) {
@@ -120,7 +121,7 @@
 
     }
 
-    function searchPlaces(types, keyword) {
+    function searchPlaces(types, keyword, radius) {
       console.log(types);
       var service = new google.maps.places.PlacesService(self.instanceMap);
       var center = self.instanceMap.getCenter();
@@ -128,20 +129,45 @@
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
         keyword: keyword,
-        radius: 3000,
+        radius: radius,
       }, self.processResults);
 
     }
 
 
-    function search(keyword) {
+    function distanceBetween(origin, destination, item) {
+      var deferred = $q.defer();
+      var originLatLng = new google.maps.LatLng(origin.lat, origin.lng);
+      var destinationLatLng = new google.maps.LatLng(destination.lat, destination.lng);
+      var service = new google.maps.DistanceMatrixService;
+      service.getDistanceMatrix({
+        origins: [originLatLng],
+        destinations: [destinationLatLng],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false
+      }, function(response, status) {
+
+        if (status !== google.maps.DistanceMatrixStatus.OK) {
+          deferred.reject([response, item]);
+        } else {
+          deferred.resolve([response, item]);
+        }
+
+      });
+      return deferred.promise;
+
+    }
+
+    function search(keyword, radius) {
       var service = new google.maps.places.PlacesService(self.instanceMap);
       var center = self.instanceMap.getCenter();
       service.nearbySearch({
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
         keyword: keyword,
-        radius: 3000,
+        radius: radius,
       }, self.processResults);
 
     }
@@ -154,9 +180,25 @@
         var service = new google.maps.places.PlacesService(self.instanceMap);
         var infoWindow = new google.maps.InfoWindow();
 
+        var center = self.instanceMap.getCenter();
+
         self.items = getItemsFromMapsPlaces(results, self.items);
         for (var i=0; i < self.items.length; i++) {
+          console.log('create');
           createMarker(self.items[i]);
+          if(self.items[i].coords) {
+            distanceBetween({
+              lat: self.items[i].coords.latitude,
+              lng: self.items[i].coords.longitude
+            }, {lat: center.lat(), lng: center.lng()}, self.items[i]).then(
+              function(output) {
+                var resp = output[0];
+                var item = output[1];
+                console.log(resp, item);
+            }, function(resp) {
+                console.error(resp);
+            })
+          }
         }
 
 
@@ -171,12 +213,13 @@
             pagination.nextPage();
           });
         }
+
+        self.scope_.$apply();
       }
     }
 
 
     function createMarker(item) {
-      console.log(self.instanceMap);
       if(item.coords) {
         var marker = new google.maps.Marker({
           map: self.instanceMap,
@@ -190,8 +233,8 @@
         });
 
         google.maps.event.addListener(marker, 'click', function() {
-          infoWindow.setContent(item.name);
-          infoWindow.open(self.instanceMap, this);
+          //infoWindow.setContent(item.name);
+          //infoWindow.open(self.instanceMap, this);
           self.editItem(item, null, -1);
         });
       }
@@ -212,13 +255,13 @@
     }
 
     function createPlace(place) {
-      console.log(place.geometry.location.lat());
+      console.log(place);
       var item = {
         key: place['place_id'],
         name: place['name'],
         place_id: place['place_id'],
         formatted_phone_number: place['formatted_phone_number'],
-        type: 'places',
+        type: 'search_places',
         types: place['types'],
         formatted_address: place['formatted_address'],
         coords: {
@@ -379,6 +422,7 @@
 
     function initAutocomplete() {
 
+      //TODO: Use the material autocomplete instead. http://stackoverflow.com/questions/30274617/google-maps-autocomplete-with-material-design
       // Create the search box and link it to the UI element.
       var input = document.getElementById('search-box');
       var searchBox = new google.maps.places.SearchBox(input);
