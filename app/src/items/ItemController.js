@@ -18,6 +18,9 @@
   function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q,
       $routeParams, $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope, $timeout) {
     var self = this;
+    self.scope_ = $rootScope;
+    self.timeout = $timeout;
+
     // Open menu origin.
     self.originatorEv = null;
     // Functions
@@ -30,14 +33,13 @@
     self.centerToMap = centerToMap;
     self.loadInitialMap = loadInitialMap;
     self.changeSelectedState = changeSelectedState;
-    self.scope_ = $rootScope;
     self.updateBounds = updateBounds;
     self.processResults = processResults;
     self.searchPlaces = searchPlaces;
     self.search = search;
     self.initAutocomplete = initAutocomplete;
+    self.createItemFromGooglePlace = createItemFromGooglePlace;
 
-    self.timeout = $timeout;
     self.typePage = $routeParams['type'];
 
 
@@ -151,10 +153,7 @@
       if (status !== google.maps.places.PlacesServiceStatus.OK) {
         return;
       } else {
-        var service = new google.maps.places.PlacesService(self.instanceMap);
-        var infoWindow = new google.maps.InfoWindow();
-
-        self.items = getItemsFromMapsPlaces(results, self.items);
+        self.items = createItemsFromGooglePlaces(results);
         for (var i=0; i < self.items.length; i++) {
           createMarker(self.items[i]);
         }
@@ -176,7 +175,7 @@
 
 
     function createMarker(item) {
-      console.log(self.instanceMap);
+      console.log(item.coords);
       if(item.coords) {
         var marker = new google.maps.Marker({
           map: self.instanceMap,
@@ -185,13 +184,10 @@
             url: 'http://maps.gstatic.com/mapfiles/circle.png',
             anchor: new google.maps.Point(20, 20),
             scaledSize: new google.maps.Size(10, 17)
-          },
-          original: item.original
+          }
         });
 
         google.maps.event.addListener(marker, 'click', function() {
-          infoWindow.setContent(item.name);
-          infoWindow.open(self.instanceMap, this);
           self.editItem(item, null, -1);
         });
       }
@@ -211,8 +207,7 @@
         center: {latitude: item.coords.latitude, longitude: item.coords.longitude}};
     }
 
-    function createPlace(place) {
-      console.log(place.geometry.location.lat());
+    function createItemFromGooglePlace(place) {
       var item = {
         key: place['place_id'],
         name: place['name'],
@@ -230,8 +225,7 @@
           'draggable': false,
           'icon' : '/assets/icons_map/Map-Marker-Push-Pin-1-Left-Pink-icon-32.png'
         },
-        content: null,
-        original: place
+        content: null
       };
       if (place.photos) {
         item['image'] = place.photos[0].getUrl({'maxWidth': 400, 'maxHeight': 400});
@@ -239,13 +233,21 @@
       return item;
     }
 
-    function getItemsFromMapsPlaces(places, items) {
+    function createItemsFromGooglePlaces(places) {
+      for (var i = 0; i < places.length; i++) {
+        places[i] = createItemFromGooglePlace(places[i]);
+      };
+
+      return places;
+    }
+
+    function getItemsFromMapsPlaces(item) {
       var newItems = items;
       var service = new google.maps.places.PlacesService(self.instanceMap);
       for (var i = 0; i < places.length; i++) {
 
 
-        newItems.push(createPlace(places[i]));
+        newItems.push(self.createItemFromGooglePlace(places[i]));
         /**
         self.timeout(function(item, place_id, i) {
 
