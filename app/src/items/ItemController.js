@@ -16,10 +16,15 @@
    * @constructor
    */
   function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q,
-      $routeParams, $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope, $timeout) {
+      $routeParams, $mdDialog, uiGmapGoogleMapApi, uiGmapIsReady, $rootScope,
+      $timeout) {
     var self = this;
     self.scope_ = $rootScope;
-    self.timeout = $timeout;
+    self.timeout_ = $timeout;
+    self.typePage = $routeParams['type'];
+    self.items = [];
+    self.markers = [];
+    self.PLACE_TYPES = itemService.PLACE_TYPES;
 
     // Open menu origin.
     self.originatorEv = null;
@@ -29,7 +34,7 @@
     self.openMenu = openMenu;
     self.toggleList = togglePeopleList;
     self.getItemsFromMapsPlaces = getItemsFromMapsPlaces;
-    self.initPlaces = initPlaces;
+    self.createMarkers = createMarkers;
     self.centerToMap = centerToMap;
     self.loadInitialMap = loadInitialMap;
     self.changeSelectedState = changeSelectedState;
@@ -39,8 +44,12 @@
     self.search = search;
     self.initAutocomplete = initAutocomplete;
     self.createItemFromGooglePlace = createItemFromGooglePlace;
+    self.clearSearchResults = clearSearchResults;
+    self.clearMarkers = clearMarkers;
 
-    self.typePage = $routeParams['type'];
+    self.startFromItem = startFromItem;
+    self.calculateDistance = calculateDistance;
+    self.startItem = {};
 
 
 
@@ -51,8 +60,25 @@
 
 
 
+    function startFromItem(item) {
+      self.startItem = item;
+    }
 
+    function calculateDistance(item) {
+        distanceBetween({
+          lat: self.startItem.coords.latitude,
+          lng: self.startItem.coords.longitude
+        }, {lat: item.coords.latitude, lng: item.coords.longitude}, item).then(
+            function(output) {
+              var resp = output[0];
+              var item = output[1];
+              console.log(resp);
+              alert("Distance:" + resp.rows[0].elements[0]['distance']['text'] + "("+resp.rows[0].elements[0]['duration']['text']+")");
+            }, function(resp) {
+              console.error(resp);
+            })
 
+    }
 
     function changeSelectedState(item, changeFirst) {
       item.selected = (item.selected === undefined)? false: item.selected;
@@ -88,7 +114,7 @@
 
     function loadInitialMap(maps) {
         self.map = {
-        center: {latitude: 34.18150377077659, longitude: -118.592517321875}, zoom: 16};
+        center: {latitude: 40.72800630217342, longitude:-73.99877832818606}, zoom: 14};
 
       uiGmapIsReady.promise()
         .then(function (map_instances) {
@@ -97,13 +123,16 @@
           updateBounds();
           // Updates search bounds on moving the map.
           maps.event.addListener(self.instanceMap, 'idle', updateBounds);
-          self.initAutocomplete();
+
           itemService.loadAllItems()
                 .then(function(items) {
                   self.items = items;
 
                   if (self.typePage == 'places') {
-                    self.initPlaces(self.items);
+                    self.createMarkers(self.items);
+                  }
+                  if (self.typePage == 'search_places') {
+                    self.initAutocomplete();
                   }
                 });
         });
@@ -122,7 +151,7 @@
 
     }
 
-    function searchPlaces(types, keyword) {
+    function searchPlaces(types, keyword, radius) {
       console.log(types);
       var service = new google.maps.places.PlacesService(self.instanceMap);
       var center = self.instanceMap.getCenter();
@@ -130,20 +159,45 @@
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
         keyword: keyword,
-        radius: 3000,
+        radius: radius,
       }, self.processResults);
 
     }
 
 
-    function search(keyword) {
+    function distanceBetween(origin, destination, item) {
+      var deferred = $q.defer();
+      var originLatLng = new google.maps.LatLng(origin.lat, origin.lng);
+      var destinationLatLng = new google.maps.LatLng(destination.lat, destination.lng);
+      var service = new google.maps.DistanceMatrixService;
+      service.getDistanceMatrix({
+        origins: [originLatLng],
+        destinations: [destinationLatLng],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false
+      }, function(response, status) {
+
+        if (status !== google.maps.DistanceMatrixStatus.OK) {
+          deferred.reject([response, item]);
+        } else {
+          deferred.resolve([response, item]);
+        }
+
+      });
+      return deferred.promise;
+
+    }
+
+    function search(keyword, radius) {
       var service = new google.maps.places.PlacesService(self.instanceMap);
       var center = self.instanceMap.getCenter();
       service.nearbySearch({
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
         keyword: keyword,
-        radius: 3000,
+        radius: radius,
       }, self.processResults);
 
     }
@@ -154,8 +208,27 @@
         return;
       } else {
         self.items = createItemsFromGooglePlaces(results);
+        self.createMarkers(self.items);
+        var service = new google.maps.places.PlacesService(self.instanceMap);
+        var infoWindow = new google.maps.InfoWindow();
+
+        var center = self.instanceMap.getCenter();
+
+        //self.items = getItemsFromMapsPlaces(results, self.items);
         for (var i=0; i < self.items.length; i++) {
-          createMarker(self.items[i]);
+          if(self.items[i].coords) {
+            distanceBetween({
+              lat: self.items[i].coords.latitude,
+              lng: self.items[i].coords.longitude
+            }, {lat: center.lat(), lng: center.lng()}, self.items[i]).then(
+              function(output) {
+                var resp = output[0];
+                var item = output[1];
+                console.log(resp, item);
+            }, function(resp) {
+                console.error(resp);
+            })
+          }
         }
 
 
@@ -170,12 +243,13 @@
             pagination.nextPage();
           });
         }
+
+        self.scope_.$apply();
       }
     }
 
 
     function createMarker(item) {
-      console.log(item.coords);
       if(item.coords) {
         var marker = new google.maps.Marker({
           map: self.instanceMap,
@@ -183,20 +257,23 @@
           icon: {
             url: 'http://maps.gstatic.com/mapfiles/circle.png',
             anchor: new google.maps.Point(20, 20),
-            scaledSize: new google.maps.Size(10, 17)
+            scaledSize: new google.maps.Size(20, 34)
           }
         });
+        self.markers.push(marker);
 
         google.maps.event.addListener(marker, 'click', function() {
+
+          //infoWindow.setContent(item.name);
+          //infoWindow.open(self.instanceMap, this);
           self.editItem(item, null, -1);
         });
       }
     }
 
-    function initPlaces(places) {
+    function createMarkers(places) {
 
       for (var i=0; i < places.length; i++) {
-        console.log(places[i]);
         createMarker(places[i]);
       }
 
@@ -208,12 +285,13 @@
     }
 
     function createItemFromGooglePlace(place) {
+
       var item = {
         key: place['place_id'],
         name: place['name'],
         place_id: place['place_id'],
         formatted_phone_number: place['formatted_phone_number'],
-        type: 'places',
+        type: 'search_places',
         types: place['types'],
         formatted_address: place['formatted_address'],
         coords: {
@@ -249,7 +327,7 @@
 
         newItems.push(self.createItemFromGooglePlace(places[i]));
         /**
-        self.timeout(function(item, place_id, i) {
+        self.timeout_(function(item, place_id, i) {
 
           console.log(place_id);
           service.getDetails({
@@ -373,6 +451,14 @@
 
     function clearSearchResults() {
       self.items = [];
+      clearMarkers();
+
+    }
+
+    function clearMarkers() {
+      for (var i = 0; i < self.markers.length; i++) {
+        self.markers[i].setMap(null);
+      }
     }
 
     // This example adds a search box to a map, using the Google Place Autocomplete
@@ -381,6 +467,7 @@
 
     function initAutocomplete() {
 
+      //TODO: Use the material autocomplete instead. http://stackoverflow.com/questions/30274617/google-maps-autocomplete-with-material-design
       // Create the search box and link it to the UI element.
       var input = document.getElementById('search-box');
       var searchBox = new google.maps.places.SearchBox(input);
