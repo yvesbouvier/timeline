@@ -213,6 +213,17 @@
       'zoo'
     ];
 
+    var setKeysOnItems = function(items) {
+      for (var i=0; i < items.length; i++) {
+        items[i].key = "a" + i;
+      }
+      return items;
+    }
+
+    items = setKeysOnItems(items);
+
+    console.log(items);
+
     return {
       PLACE_TYPES: place_types,
       loadAllItems : function() {

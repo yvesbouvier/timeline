@@ -1,4 +1,4 @@
-<div ng-controller="ItemController as ul" ng-switch="ul.typePage"
+<div ng-controller="ItemController as ctrl" ng-switch="ctrl.typePage"
      layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
     <script type="text/ng-template" id="searchbox.tpl.html">
         <input type="text" id="searchbox" class="search-box"
@@ -8,7 +8,7 @@
          class="md-whiteframe-3dp">
         <md-toolbar layout="row" class="md-whiteframe-z1">
             <div class="md-toolbar-tools">
-                <md-button class="md-icon-button" ng-click="ul.toggleList()"
+                <md-button class="md-icon-button" ng-click="ctrl.toggleList()"
                            aria-label="Show People List">
                     <md-icon md-svg-icon="menu"></md-icon>
                 </md-button>
@@ -17,42 +17,42 @@
                 <h1 flex ng-switch-when="events">Events</h1>
                 <h1 flex ng-switch-when="people">People</h1>
                 <md-button class="md-icon-button"
-                           ng-click="ul.addItem($event, ul.typePage)">
+                           ng-click="ctrl.addItem($event, ctrl.typePage)">
                     <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
                         <i class="material-icons-extended">add</i></md-icon>
                 </md-button>
             </div>
         </md-toolbar>
-        <p>lat: {{ul.map.center.latitude}} / lng: {{ul.map.center.longitude}}</p>
-        <p>Start Coords: {{ul.startItem}}</p>
+        <p>lat: {{ctrl.map.center.latitude}} / lng: {{ctrl.map.center.longitude}}</p>
+        <p>Start Coords: {{ctrl.startItem}}</p>
         <md-content style="height: 600px; overflow-y: auto;">
             <!-- Search -->
-            <div layout="column" ng-if="ul.typePage=='search_places'">
+            <div layout="column" ng-if="ctrl.typePage=='search_places'">
 
-                <input layout-margin id="search-box" style="padding:10px;" ng-model="query">
-                <md-button ng-click="ul.search(query, radius)" class="md-primary md-raised">Search</md-button>
+                <input layout-margin id="search-box" style="padding:10px;" ng-model="ctrl.query">
+                <md-button ng-click="ctrl.search(query, radius)" class="md-primary md-raised">Search</md-button>
                 <h2>Nearby</h2>
                 <md-select ng-model="placeType">
 
-                    <md-option ng-repeat="pt in ul.PLACE_TYPES" ng-value="'{{pt}}'">{{pt}}</md-option>
+                    <md-option ng-repeat="pt in ctrl.PLACE_TYPES" ng-value="'{{pt}}'">{{pt}}</md-option>
                 </md-select>
                 <md-input-container>
                     <label>Query</label>
-                    <input ng-model="nearByQuery">
+                    <input ng-model="ctrl.nearByQuery">
                 </md-input-container>
                 <div layout>
                     <div flex="10" layout layout-align="center center">
                         <span class="md-body-1">Radius</span>
                     </div>
-                    <md-slider flex min="50" default="100" max="5000" ng-model="radius" aria-label="blue" id="blue-slider" class>
+                    <md-slider flex min="50" max="5000" ng-model="ctrl.radius" aria-label="blue" id="blue-slider" class>
                     </md-slider>
                     <div flex="20" layout layout-align="center center">
-                        <input flex type="number" ng-model="radius" aria-label="red" aria-controls="red-slider">
+                        <input flex type="number" ng-model="ctrl.radius" aria-label="red" aria-controls="red-slider">
                     </div>
                 </div>
                 <nav layout="row">
-                    <md-button ng-click="ul.searchPlaces([placeType], nearByQuery, radius)" class="md-primary md-raised">Search</md-button>
-                    <md-button ng-click="ul.clearSearchResults()" class="md-primary md-raised">Clear Results</md-button>
+                    <md-button ng-click="ctrl.searchPlaces([placeType], nearByQuery, radius)" class="md-primary md-raised">Search</md-button>
+                    <md-button ng-click="ctrl.clearSearchResults()" class="md-primary md-raised">Clear Results</md-button>
                     <md-button id="more">Load more results</md-button>
                 </nav>
             </div>
@@ -60,12 +60,12 @@
             <md-list>
                 <h2>{{filtered.length}} items</h2>
                 <md-list-item layout="column" layout-align="center left"
-                              ng-repeat="it  in filtered = (ul.items | filter: ul.typePage)  track by $index">
+                              ng-repeat="it  in filtered = (ctrl.items | filter: ctrl.typePage)  track by $index">
 
                     <div>
                         <div layout="column">
                             <md-progress-linear ng-if="it.percent.fact"
-                                                md-mode="determinate"
+                                                ng-model="ctrl.determinate"
                                                 value="{{it.percent.fact}}"></md-progress-linear>
                             <div layout="row">
                                 <div ng-if="it.image">
@@ -75,7 +75,7 @@
                                     <md-checkbox class="md-icon-button"
                                                  ng-model="it.selected"
                                                  aria-label="Select item"
-                                                 ng-change="ul.changeSelectedState(it, false);"></md-checkbox>
+                                                 ng-change="ctrl.changeSelectedState(it, false);"></md-checkbox>
                                     {{it.name}}
                                 </h2>
                             </div>
@@ -86,44 +86,36 @@
                                 <div><span ng-repeat="k in it.types track by $index">{{k}}<span ng-if="!$last">, </span></span></div>
                             </div>
                             <section layout-align="end" layout="row">
-                                <md-button class="md-icon-button"
-                                           ng-click="ul.selectItem(it)">
+                                <md-button ng-if="it.coords" class="md-icon-button"
+                                           ng-click="ctrl.startFromItem(it)">
                                     <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                        class="material-icons-extended">info</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button class="md-icon-button"
-                                           ng-click="ul.startFromItem(it)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                            class="material-icons-extended">start</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button class="md-icon-button"
-                                           ng-click="ul.calculateDistance(it)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                            class="material-icons-extended">start</i>
+                                             style="margin: auto 3px auto 0;">
+                                        <i class="material-icons-extended">place</i>
                                     </md-icon>
                                 </md-button>
                                 <md-button ng-if="it.coords" class="md-icon-button"
-                                           ng-click="ul.centerToMap(it)">
+                                           ng-click="ctrl.calculateDistance(it)">
+                                    <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
+                                        <i class="material-icons-extended">directions</i>
+                                    </md-icon>
+                                </md-button>
+                                <md-button ng-if="it.coords" class="md-icon-button"
+                                           ng-click="ctrl.centerToMap(it)">
                                     <md-icon md-menu-align-target
                                              style="margin: auto 3px auto 0;"><i
                                         class="material-icons-extended">map</i>
                                     </md-icon>
                                 </md-button>
                                 <md-button ng-if="it.key" class="md-icon-button"
-                                           ng-click="ul.editItem(it, $event, $index)">
+                                           ng-click="ctrl.editItem(it, $event, $index)">
                                     <md-icon md-menu-align-target
                                              style="margin: auto 3px auto 0;"><i
                                         class="material-icons-extended">edit</i>
                                     </md-icon>
                                 </md-button>
-                                <md-button ng-if="!it.key"
-                                           class="md-icon-button md-primary"
-                                           ng-click="ul.addItem(it, $event)">
+                                <md-button
+                                           class="md-icon-button"
+                                           ng-click="ctrl.addItem(it)">
                                     <md-icon md-menu-align-target
                                              style="margin: auto 3px auto 0;"><i
                                         class="material-icons-extended">add</i>
@@ -138,9 +130,9 @@
     </div>
     <div flex="45" id="map_canvas">
         <ui-gmap-google-map
-            center="ul.map.center"
-            options="ul.map.options"
-            zoom="ul.map.zoom">
+            center="ctrl.map.center"
+            options="ctrl.map.options"
+            zoom="ctrl.map.zoom">
 
         </ui-gmap-google-map>
 

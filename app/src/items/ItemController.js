@@ -24,6 +24,8 @@
     self.typePage = $routeParams['type'];
     self.items = [];
     self.markers = [];
+    self.radius = 100;
+    self.query =" eeeee";
     self.PLACE_TYPES = itemService.PLACE_TYPES;
 
     // Open menu origin.
@@ -65,6 +67,7 @@
     }
 
     function calculateDistance(item) {
+      console.log(item);
         distanceBetween({
           lat: self.startItem.coords.latitude,
           lng: self.startItem.coords.longitude
@@ -391,9 +394,8 @@
 
     }
 
-    function addItem(ev, typePage) {
-      var item = {};
-      itemService[typePage].push({});
+    function addItem(item) {
+      itemService[item.type].push(item);
       self.items = itemService[typePage];
       editItem(self.items[self.items.length - 1], ev);
     }

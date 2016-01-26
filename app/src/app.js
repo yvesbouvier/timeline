@@ -16,7 +16,10 @@ angular
         $routeProvider.
         when('/item/:type', {
             templateUrl: '/src/items/view/main.ng',
-            controller: 'ItemController'});
+            controller: 'ItemController'}).
+        when('/', {
+          templateUrl: '/src/items/view/main.ng',
+          controller: 'ItemController'});
 
         uiGmapGoogleMapApiProvider.configure({
             key: 'AIzaSyAFJjUaUQy574SfQ_i4RBwdloDVhjxOU5I',

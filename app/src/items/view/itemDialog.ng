@@ -5,8 +5,10 @@
                 <h2>{{ctrl.item.name}}</h2>
                 <span flex></span>
                 <md-button class="md-icon-button" ng-click="cancel()">
-                   Close <md-icon md-svg-src="img/icons/ic_close_24px.svg"
-                             aria-label="Close dialog"></md-icon>
+                  <md-icon md-menu-align-target
+                             style="margin: auto 3px auto 0;"><i
+                            class="material-icons-extended">close</i>
+                    </md-icon>
                 </md-button>
             </div>
         </md-toolbar>
@@ -27,7 +29,6 @@
                 <md-tab label="edit">
                     <md-content layout="column" class="md-padding">
                         <h2>Edit Meta</h2>
-
                         <md-input-container layout="row">
                             <label>Name</label>
                             <input ng-model="ctrl.item.name">
