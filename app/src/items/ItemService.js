@@ -222,15 +222,10 @@
 
     items = setKeysOnItems(items);
 
-    console.log(items);
-
     return {
       PLACE_TYPES: place_types,
-      loadAllItems : function() {
-        this.items = items;
-        // Simulate async nature of real remote calls
-        return $q.when(items);
-      }
+      items: items
+
     };
   }
 

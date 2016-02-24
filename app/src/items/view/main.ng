@@ -137,7 +137,7 @@
       </md-tabs>
     </div>
     <md-list>
-      <h2>{{filtered.length}} items {{ctrl.items.length}}</h2>
+      <h2>{{filtered.length}} items</h2>
       <md-list-item id="item{{it.key}}" layout="column" layout-align="center left"
                     ng-repeat="it in filtered = (ctrl.items | filter: ctrl.typePage)  track by $index">
 
@@ -170,7 +170,7 @@
               </md-button>
               <md-menu-content width="4">
                 <md-menu-item ng-if="it.coords">
-                  <md-button ng-click="ctrl.dragItem(it)">
+                  <md-button ng-click="ctrl.dragMarker(it)">
                     <md-icon
                         style="margin: auto 3px auto 0;">
                       <i class="material-icons-extended">place</i>
@@ -242,6 +242,4 @@
     </md-list>
   </md-content>
 </div>
-<div id="map_canvas">
 
-</div>

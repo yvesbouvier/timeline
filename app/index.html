@@ -31,6 +31,8 @@
     <script src="src/items/ItemController.js"></script>
     <script src="src/items/ItemDialogController.js"></script>
     <script src="src/items/ItemService.js"></script>
+    <script src="src/items/mapService.js"></script>
+    <script src="src/items/mapController.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons+Extended" rel="stylesheet">
     <style type="text/css">
@@ -83,6 +85,12 @@
     </style>
   </head>
 
-  <body ng-view ng-app="starterApp" layout="row" ng-cloak>
+  <body  ng-app="starterApp">
+  <div ng-view layout="row" ng-cloak></div>
+  <div ng-controller="MapController as ctrl" ng-init="ctrl.loadInitialMap()"></div>
+  <div id="map_canvas">
+
+  </div>
   </body>
+
 </html>

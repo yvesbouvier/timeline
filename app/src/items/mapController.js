@@ -2,10 +2,10 @@
 
   angular
     .module('item')
-    .controller('ItemController', [
+    .controller('MapController', [
       'itemService', '$mdSidenav', '$mdBottomSheet', '$log', '$q',
       '$routeParams', '$mdDialog',
-      '$rootScope', '$timeout', '$location', '$controller', ItemController
+      '$rootScope', '$timeout', '$location', 'MapService', MapController
     ]);
   /**
    * Main Controller for the Angular Material Starter App
@@ -14,35 +14,16 @@
    * @param avatarsService
    * @constructor
    */
-  function ItemController(itemService, $mdSidenav, $mdBottomSheet, $log, $q,
+  function MapController(itemService, $mdSidenav, $mdBottomSheet, $log, $q,
                           $routeParams, $mdDialog, $rootScope,
-                          $timeout, $location, $controller) {
+                          $timeout, $location, MapService) {
     var self = this;
-
-
-    self.mapController_ = $controller('MapController', {$scope: {}});
-    self.dragMarker = self.mapController_.dragMarker;
-
-    self.createMarkers = self.mapController_.createMarkers;
-    self.centerToMap = self.mapController_.centerToMap;
-    self.updateBounds = self.mapController_.updateBounds;
-    self.processResults = self.mapController_.processResults;
-    self.searchPlaces = self.mapController_.searchPlaces;
-    self.calculateDistance = self.mapController_.calculateDistance;
-    self.addTransitLayer = self.mapController_.addTransitLayer;
-    self.addTrafficLayer = self.mapController_.addTrafficLayer;
-    self.initSearch = self.mapController_.initSearch;
-    self.clearMarkers = self.mapController_.clearMarkers;
-    self.toggleList = self.mapController_.toggleList;
-
-
     self.scope_ = $rootScope;
     self.location_ = $location;
     self.timeout_ = $timeout;
     self.typePage = $routeParams['type'];
     self.items = itemService.items;
-    self.itemService_ = itemService;
-
+    self.mapService_ = MapService;
     self.markers = [];
     self.markerToItemKey = {};
     self.radius = 100;
@@ -52,23 +33,34 @@
     self.originatorEv = null;
     // Functions
     self.editItem = editItem;
+    self.toggleList = togglePeopleList;
     self.addItem = addItem;
+    self.dragMarker = dragMarker;
     self.openMenu = openMenu;
     self.getItemsFromMapsPlaces = getItemsFromMapsPlaces;
-
+    self.createMarkers = createMarkers;
+    self.centerToMap = centerToMap;
+    self.loadInitialMap = loadInitialMap;
     self.changeSelectedState = changeSelectedState;
-
+    self.updateBounds = updateBounds;
+    self.processResults = processResults;
+    self.searchPlaces = searchPlaces;
     self.search = search;
     self.initAutocomplete = initAutocomplete;
     self.createItemFromGooglePlace = createItemFromGooglePlace;
     self.clearSearchResults = clearSearchResults;
+    self.clearMarkers = clearMarkers;
     self.openMenu = openMenu;
     self.setMarkerDraggable = setMarkerDraggable;
     self.originatorEv = null;
 
     self.startFromItem = startFromItem;
+    self.calculateDistance = calculateDistance;
 
+    self.addTransitLayer = addTransitLayer;
+    self.addTrafficLayer = addTrafficLayer;
 
+    self.initSearch = initSearch;
 
     self.displaySearch = false;
 
@@ -78,7 +70,6 @@
     self.transitLayer = null;
     self.startItem = {};
 
-    self.controller = $controller;
 
 
 
@@ -99,6 +90,7 @@
         function (output) {
           var resp = output[0];
           var item = output[1];
+          console.log(resp);
           alert("Distance by car:" + resp.rows[0].elements[0]['distance']['text'] + "(" + resp.rows[0].elements[0]['duration']['text'] + ")");
         }, function (resp) {
           console.error(resp);
@@ -122,7 +114,8 @@
     }
 
     function initSearch() {
-      return self.itemService_.initSearch();
+      self.displaySearch = true;
+      self.initAutocomplete();
 
     }
 
@@ -140,7 +133,7 @@
 
     function dragMarker(item) {
       var marker = self.markerToItemKey[item.key];
-      self.setMarkerDraggable(item, !marker.draggable, self.instanceMap);
+      self.setMarkerDraggable(item, !marker.draggable, self.mapService_.map);
     }
 
 
@@ -154,16 +147,65 @@
 
     }
 
+    function updateBounds() {
+      var options = {bounds: self.mapService_.map.getBounds()};
+      //self.searchbox.options = options;
+    }
+
+    function addTransitLayer() {
+
+      if(!self.transitLayerOn) {
+        self.transitLayer = new google.maps.TransitLayer();
+        self.transitLayer.setMap(self.mapService_.map);
+        self.transitLayerOn = true;
+      } else {
+        self.transitLayer.setMap(null);
+        self.transitLayerOn = false;
+      }
+    }
+
+    function addTrafficLayer() {
+      console.log(self);
+      if(!self.trafficLayerOn) {
+        self.trafficLayer = new google.maps.TrafficLayer();
+        self.trafficLayer.setMap(self.mapService_.map);
+        self.trafficLayerOn = true;
+      } else {
+        self.trafficLayer.setMap(null);
+        self.trafficLayerOn = false;
+      }
+    }
+
+    function loadInitialMap() {
+      //TODO: Remove this when center is better handled.
+      self.mapService_.map = new google.maps.Map(
+        document.getElementById('map_canvas'),
+        {center: {
+          lat: 40.72800630217342,
+          lng: -73.99877832818606
+        }, zoom: 14});
+      google.maps.event.trigger(self.mapService_.map, 'resize');
+ console.log(self.mapService_.map);
+      updateBounds();
+
+      // Updates search bounds on moving the map.
+      google.maps.event.addListener(self.mapService_.map, 'idle', updateBounds);
+
+      self.createMarkers(itemService.items);
+
+
+    }
 
     function searchPlaces(types, keyword, radius) {
-      var service = new google.maps.places.PlacesService(self.instanceMap);
-      var center = self.instanceMap.getCenter();
+      var service = new google.maps.places.PlacesService(self.mapService_.map);
+      var center = self.mapService_.map.getCenter();
       service.nearbySearch({
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
         keyword: keyword,
         radius: radius,
       }, self.processResults);
+
     }
 
 
@@ -193,8 +235,8 @@
     }
 
     function search(keyword, radius) {
-      var service = new google.maps.places.PlacesService(self.instanceMap);
-      var center = self.instanceMap.getCenter();
+      var service = new google.maps.places.PlacesService(self.mapService_.map);
+      var center = self.mapService_.map.getCenter();
       service.nearbySearch({
         location: {lat: center.lat(), lng: center.lng()},
         types: types,
@@ -213,10 +255,10 @@
         self.createMarkers(newItems);
         Array.prototype.push.apply(self.items, newItems);
         angular.extend(self.items, newItems);
-        var service = new google.maps.places.PlacesService(self.instanceMap);
+        var service = new google.maps.places.PlacesService(self.mapService_.map);
         var infoWindow = new google.maps.InfoWindow();
 
-        var center = self.instanceMap.getCenter();
+        var center = self.mapService_.map.getCenter();
 
         //self.items = getItemsFromMapsPlaces(results, self.items);
         for (var i = 0; i < self.items.length; i++) {
@@ -253,7 +295,101 @@
     }
 
 
+    function createMarker(item) {
+      if (!item.coords) { return; }
 
+      var icon;
+      if(item.type == 'events') {
+        icon = 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=E|FFFF00';
+      } else if(item.type == 'places') {
+        icon = 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=L|039be5';
+      } else {// Person
+        icon = 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=P|00FF00';
+      }
+
+      var image =  {
+        url: icon,
+        // This marker is 20 pixels wide by 32 pixels high.
+        size: new google.maps.Size(20, 32),
+        scaledSize:  new google.maps.Size(20, 32),
+        // The origin for this image is (0, 0).
+        origin: new google.maps.Point(0, 0),
+        // The anchor for this image is the base of the flagpole at (0, 32).
+        anchor: new google.maps.Point(0, 32)
+      };
+
+
+      var marker = new google.maps.Marker({
+        map: self.mapService_.map,
+        item: item,
+        position: {lat: item.coords.latitude, lng: item.coords.longitude},
+        icon: image,
+        options: {
+          'draggable': false,
+          'icon': icon
+        }
+      });
+
+      self.markerToItemKey[item.key] = marker;
+      self.markers.push(marker);
+
+
+
+      google.maps.event.addListener(
+        marker,
+        'click',
+        function () {
+          self.editItem(item, null, -1);
+        });
+
+      google.maps.event.addListener(
+        marker,
+        'mouseover',
+        function () {
+          //self.highlightItem(item);
+
+
+        });
+
+      google.maps.event.addListener(
+        marker,
+        'dragstart',
+        function () {
+
+          console.log(this);
+          this.item.coords = {
+            latitude: this.position.lat(),
+            longitude: this.position.lng()
+          };
+
+        });
+      google.maps.event.addListener(
+        marker,
+        'dragend',
+        function () {
+        });
+
+
+
+    };
+
+    function createMarkers(places) {
+      angular.forEach(places, function (item) {
+        if (item.coords) {
+          createMarker(item);
+
+        }
+      });
+
+    };
+
+    function centerToMap(item) {
+      self.map = {
+        center: {latitude: item.coords.latitude, longitude: item.coords.longitude}
+      };
+
+
+    }
 
     function createItemFromGooglePlace(place) {
 
@@ -293,7 +429,7 @@
 
     function getItemsFromMapsPlaces(item) {
       var newItems = self.items;
-      var service = new google.maps.places.PlacesService(self.instanceMap);
+      var service = new google.maps.places.PlacesService(self.mapService_.map);
       for (var i = 0; i < places.length; i++) {
 
 
@@ -330,6 +466,7 @@
     }
 
 
+
     function editItem(item, ev, index) {
       $mdDialog.show({
           controller: 'ItemDialogController',
@@ -363,9 +500,17 @@
     };
 
 
+    function togglePeopleList() {
+      var pending = $mdBottomSheet.hide() || $q.when(true);
+      pending.then(function () {
+        $mdSidenav('left').toggle();
+      });
+    }
+
+
     function clearSearchResults() {
       self.items = [];
-      self.mapController_.clearMarkers();
+      clearMarkers();
 
     }
 
@@ -385,10 +530,10 @@
       var input = document.getElementById('search-box');
 
       var searchBox = new google.maps.places.SearchBox(input);
-      // self.instanceMap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+      // self.mapService_.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
       // Bias the SearchBox results towards current map's viewport.
-      self.instanceMap.addListener('bounds_changed', function () {
-        searchBox.setBounds(self.instanceMap.getBounds());
+      self.mapService_.map.addListener('bounds_changed', function () {
+        searchBox.setBounds(self.mapService_.map.getBounds());
       });
 
 
@@ -422,7 +567,7 @@
 
           // Create a marker for each place.
           markers.push(new google.maps.Marker({
-            map: self.instanceMap,
+            map: self.mapService_.map,
             icon: icon,
             title: place.name,
             position: place.geometry.location
@@ -435,7 +580,7 @@
             bounds.extend(place.geometry.location);
           }
         });
-        self.instanceMap.fitBounds(bounds);
+        self.mapService_.map.fitBounds(bounds);
       });
     }
 
