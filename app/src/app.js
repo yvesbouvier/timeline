@@ -1,6 +1,6 @@
 angular
-    .module('starterApp', ['ngMaterial', 'ngRoute', 'item', 'uiGmapgoogle-maps'])
-    .config(function($mdThemingProvider, $mdIconProvider, $routeProvider, uiGmapGoogleMapApiProvider){
+    .module('starterApp', ['ngMaterial', 'ngRoute', 'item'])
+    .config(function($mdThemingProvider, $mdIconProvider, $routeProvider){
 
         $mdIconProvider
             .defaultIconSet("./assets/svg/avatars.svg", 128)
@@ -16,16 +16,13 @@ angular
         $routeProvider.
         when('/item/:type', {
             templateUrl: '/src/items/view/main.ng',
-            controller: 'ItemController'}).
+            controller: 'ItemController',
+            controllerAs: 'ctrl'}).
         when('/', {
           templateUrl: '/src/items/view/main.ng',
-          controller: 'ItemController'});
+          controller: 'ItemController',
+          controllerAs: 'ctrl'});
 
-        uiGmapGoogleMapApiProvider.configure({
-            key: 'AIzaSyAFJjUaUQy574SfQ_i4RBwdloDVhjxOU5I',
-            v: '3.X',
-            libraries: 'places'
-        });
 
 });
 

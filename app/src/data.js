@@ -28,12 +28,12 @@ var users = [
     {
         name: 'Lia Lugo',
         avatar: 'svg-1',
-        content: 'I love cheese, especially airedale queso. Cheese and biscuits halloumi cauliflower cheese cottage cheese swiss boursin fosrphilly chalk and cheese. Lancashire.'
+        content: 'I love cheese, especially Lancashire.'
     },
     {
         name: 'George Duke',
         avatar: 'svg-2',
-        content: 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpsurvivor dictum mauris.'
+        content: 'Zombie ipsum reversus cerebro. De carne lumbering animata corpsurvivor dictum mauris.'
     },
     {
         name: 'Gener Delosreyes',

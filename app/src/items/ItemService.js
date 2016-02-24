@@ -20,20 +20,28 @@
         name: 'Police finds the car',
         type: 'events',
         percent: {fact: 20},
+        coords: {
+          latitude: 40.72787830000001,
+          longitude: -73.99078910000003,
+        },
         content: 'I love cheese, especially airedale queso. Cheese and biscuits halloumi cauliflower cheese cottage cheese swiss boursin fosrphilly chalk and cheese. Lancashire.'
       },
       {key: 'k2',
         name: 'Police tells X than Y',
         type: 'events',
         percent: {fact: 65},
+        coords: {
+          latitude: 40.71626920000001,
+          longitude: -74.00863229999999,
+        },
         content: 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpsurvivor dictum mauris.'
       },
       {key: 'k3',
         name: 'The bakery',
         type: 'places',
         coords: {
-          "latitude":34.18150377077659,
-          "longitude":-118.592517321875
+          "latitude":40.7289366,
+          "longitude":-74.00222280000003
         },
         options: {
           'draggable': false,
@@ -45,8 +53,8 @@
         name: 'The office',
         type: 'places',
         coords: {
-          latitude: 37.4054501,
-          longitude: -121.9416204,
+          latitude: 40.722655,
+          longitude: -73.99837200000002,
         },
         options: {
           'draggable': false,
@@ -57,32 +65,24 @@
       {
         name: 'The Defendant',
         type: 'people',
-        percent: {fact: 20},
-        content: 'I love cheese, especially airedale queso. Cheese and biscuits halloumi cauliflower cheese cottage cheese swiss boursin fosrphilly chalk and cheese. Lancashire.'
+        percent: {fact: 20}
       },
       {
         name: 'The procecution',
         type: 'people',
-        percent: {fact: 90},
-        content: 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpsurvivor dictum mauris.'
-      },
+        percent: {fact: 90}      },
       {
         name: 'Gener Delosreyes',
         type: 'people',
-        percent: {fact:12},
-        content: "Raw denim pour-over readymade Etsy Pitchfork. Four dollar toast pickled locavore bitters McSweeney's blog. Try-hshorts taxidermwave irony lumberhungry Kickstarter next level sriracha typewris kogi heirloom tousled. Disrupt 3 wolf moon lomo four loko. Pug mlkshk fanny pack literally hoodie bespoke, put a bird on it Marfa messenger bag kogi VHS."
-      },
+        percent: {fact:12}      },
       {
         name: 'Lawrence Ray',
         type: 'people',
-        percent: {fact: 24},
-        content: 'Scratch the furniture spit up on light gray carpet instead of adjacent linoleum so eat a plant, kill a hand p around the house and up and down stairs chasing phantoms.'
-      },
+        percent: {fact: 24}      },
       {
         name: 'Ernesto Urbina',
         type: 'people',
-        percent: {fact: 100},
-        content: 'Webtwo ipsum dolor sit amet, eskobo chumby doostang bebo. Bubbli greplin stypi prezi mzinga heroku wakoopa, shopify airbnb dogster dopplr gooru jumo, reddit plickers edmodo stypi zillow etsy.'
+        percent: {fact: 100}
       }
     ];
 

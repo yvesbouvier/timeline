@@ -2,7 +2,7 @@
   'use strict';
 
   // Prepare the 'people' module for subsequent registration of controllers and delegates
-  angular.module('item', [ 'ngMaterial', 'uiGmapgoogle-maps']).config(function(uiGmapGoogleMapApiProvider) {
+  angular.module('item', [ 'ngMaterial']).config(function() {
 
 
   });

@@ -1,140 +1,247 @@
-<div ng-controller="ItemController as ctrl" ng-switch="ctrl.typePage"
-     layout="column" tabIndex="-1" role="main" class="md-whiteframe-z2">
-    <script type="text/ng-template" id="searchbox.tpl.html">
-        <input type="text" id="searchbox" class="search-box"
-               placeholder="Search for a place"/>
-    </script>
-    <div style="position: absolute; left:10px;top:50px;z-index:50;background: white;width:450px;"
-         class="md-whiteframe-3dp">
-        <md-toolbar layout="row" class="md-whiteframe-z1">
-            <div class="md-toolbar-tools">
-                <md-button class="md-icon-button" ng-click="ctrl.toggleList()"
-                           aria-label="Show People List">
-                    <md-icon md-svg-icon="menu"></md-icon>
-                </md-button>
-                <h1 flex ng-switch-when="places">Places</h1>
-                <h1 flex ng-switch-when="search_places">Place Search</h1>
-                <h1 flex ng-switch-when="events">Events</h1>
-                <h1 flex ng-switch-when="people">People</h1>
-                <md-button class="md-icon-button"
-                           ng-click="ctrl.addItem($event, ctrl.typePage)">
-                    <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
-                        <i class="material-icons-extended">add</i></md-icon>
-                </md-button>
-            </div>
-        </md-toolbar>
-        <p>lat: {{ctrl.map.center.latitude}} / lng: {{ctrl.map.center.longitude}}</p>
-        <p>Start Coords: {{ctrl.startItem}}</p>
-        <md-content style="height: 600px; overflow-y: auto;">
-            <!-- Search -->
-            <div layout="column" ng-if="ctrl.typePage=='search_places'">
+<div style="position: absolute; left:10px;top:50px;z-index:50;background: white;width:450px;" ng-switch="ctrl.typePage"
+     class="md-whiteframe-3dp">
+  <md-sidenav class="site-sidenav md-sidenav-left md-whiteframe-z2"
+              md-component-id="left" layout="column">
+    <md-toolbar class="md-whiteframe-z1">
+      <h1>TimelineApp</h1>
+    </md-toolbar>
+    <md-subheader class="md-no-sticky">Type</md-subheader>
+    <md-list>
+      <md-list-item>
+        <a href="#item/people">
+          <md-icon md-menu-align-target
+                   style="margin: auto 3px auto 0;"><i
+              class="material-icons-extended">account_box</i></md-icon>
+          People</a>
+      </md-list-item>
+      <md-list-item>
+        <a href="#item/places">
+          <md-icon md-menu-align-target
+                   style="margin: auto 3px auto 0;"><i
+              class="material-icons-extended">place</i></md-icon>
+          Places</a>
+      </md-list-item>
+      <md-list-item>
+        <a href="#item/search_places">
+          <md-icon md-menu-align-target
+                   style="margin: auto 3px auto 0;"><i
+              class="material-icons-extended">search</i></md-icon>
+          Place Search</a>
+      </md-list-item>
+      <md-list-item>
+        <a href="#item/events">
+          <md-icon md-menu-align-target
+                   style="margin: auto 3px auto 0;"><i
+              class="material-icons-extended">event</i></md-icon>
+          Events</a>
+      </md-list-item>
+      <md-list-item>
+        <a href="#">Home</a>
+      </md-list-item>
+    </md-list>
+  </md-sidenav>
+  <md-toolbar layout="row" class="md-whiteframe-z1">
+    <div class="md-toolbar-tools">
+      <md-button class="md-icon-button" ng-click="ctrl.toggleList()"
+                 aria-label="Show People List">
+        <md-icon md-svg-icon="menu"></md-icon>
+      </md-button>
+      <h1 flex ng-switch-when="places">
+        <md-icon md-menu-align-target
+                 style="margin: auto 3px auto 0;"><i
+            class="material-icons-extended">place</i></md-icon>
+        Places
+      </h1>
+      <h1 flex ng-switch-when="search_places">
+        <md-icon md-menu-align-target
+                 style="margin: auto 3px auto 0;"><i
+            class="material-icons-extended">search</i></md-icon>
+        Place Search
+      </h1>
+      <h1 flex ng-switch-when="events">
+        <md-icon md-menu-align-target
+                 style="margin: auto 3px auto 0;"><i
+            class="material-icons-extended">event</i></md-icon>
+        Events
+      </h1>
+      <h1 flex ng-switch-when="people">
+        <md-icon md-menu-align-target
+                 style="margin: auto 3px auto 0;"><i
+            class="material-icons-extended">account_box</i></md-icon>
+        People
+      </h1>
+      <md-button
+          ng-click="ctrl.addItem($event, ctrl.typePage)">
+        <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
+          <i class="material-icons-extended">add</i></md-icon>
+        Add new
+      </md-button>
+      <md-button class="md-icon-button"
+                 ng-click="ctrl.addTransitLayer()">
+        <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
+          <i class="material-icons-extended">directions_transit</i></md-icon>
 
-                <input layout-margin id="search-box" style="padding:10px;" ng-model="ctrl.query">
-                <md-button ng-click="ctrl.search(query, radius)" class="md-primary md-raised">Search</md-button>
-                <h2>Nearby</h2>
-                <md-select ng-model="placeType">
+      </md-button>
+      <md-button class="md-icon-button"
+                 ng-click="ctrl.addTrafficLayer()">
+        <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
+          <i class="material-icons-extended">directions_car</i></md-icon>
 
-                    <md-option ng-repeat="pt in ctrl.PLACE_TYPES" ng-value="'{{pt}}'">{{pt}}</md-option>
-                </md-select>
-                <md-input-container>
-                    <label>Query</label>
-                    <input ng-model="ctrl.nearByQuery">
-                </md-input-container>
-                <div layout>
-                    <div flex="10" layout layout-align="center center">
-                        <span class="md-body-1">Radius</span>
-                    </div>
-                    <md-slider flex min="50" max="5000" ng-model="ctrl.radius" aria-label="blue" id="blue-slider" class>
-                    </md-slider>
-                    <div flex="20" layout layout-align="center center">
-                        <input flex type="number" ng-model="ctrl.radius" aria-label="red" aria-controls="red-slider">
-                    </div>
-                </div>
-                <nav layout="row">
-                    <md-button ng-click="ctrl.searchPlaces([placeType], nearByQuery, radius)" class="md-primary md-raised">Search</md-button>
-                    <md-button ng-click="ctrl.clearSearchResults()" class="md-primary md-raised">Clear Results</md-button>
-                    <md-button id="more">Load more results</md-button>
-                </nav>
-            </div>
-
-            <md-list>
-                <h2>{{filtered.length}} items</h2>
-                <md-list-item layout="column" layout-align="center left"
-                              ng-repeat="it  in filtered = (ctrl.items | filter: ctrl.typePage)  track by $index">
-
-                    <div>
-                        <div layout="column">
-                            <md-progress-linear ng-if="it.percent.fact"
-                                                ng-model="ctrl.determinate"
-                                                value="{{it.percent.fact}}"></md-progress-linear>
-                            <div layout="row">
-                                <div ng-if="it.image">
-                                    <img class="md-avatar" ng-src="{{it.image}}"/>
-                                </div>
-                                <h2 class="md-title">
-                                    <md-checkbox class="md-icon-button"
-                                                 ng-model="it.selected"
-                                                 aria-label="Select item"
-                                                 ng-change="ctrl.changeSelectedState(it, false);"></md-checkbox>
-                                    {{it.name}}
-                                </h2>
-                            </div>
-                            <div layout="column">
-                                <div>{{it.content}}</div>
-                                <div>{{it.formatted_phone_number}}</div>
-                                <div>{{it.formatted_address}}</div>
-                                <div><span ng-repeat="k in it.types track by $index">{{k}}<span ng-if="!$last">, </span></span></div>
-                            </div>
-                            <section layout-align="end" layout="row">
-                                <md-button ng-if="it.coords" class="md-icon-button"
-                                           ng-click="ctrl.startFromItem(it)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;">
-                                        <i class="material-icons-extended">place</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button ng-if="it.coords" class="md-icon-button"
-                                           ng-click="ctrl.calculateDistance(it)">
-                                    <md-icon md-menu-align-target style="margin: auto 3px auto 0;">
-                                        <i class="material-icons-extended">directions</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button ng-if="it.coords" class="md-icon-button"
-                                           ng-click="ctrl.centerToMap(it)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                        class="material-icons-extended">map</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button ng-if="it.key" class="md-icon-button"
-                                           ng-click="ctrl.editItem(it, $event, $index)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                        class="material-icons-extended">edit</i>
-                                    </md-icon>
-                                </md-button>
-                                <md-button
-                                           class="md-icon-button"
-                                           ng-click="ctrl.addItem(it)">
-                                    <md-icon md-menu-align-target
-                                             style="margin: auto 3px auto 0;"><i
-                                        class="material-icons-extended">add</i>
-                                    </md-icon>
-                                </md-button>
-                            </section>
-                        </div>
-                    </div>
-                </md-list-item>
-            </md-list>
-        </md-content>
+      </md-button>
     </div>
-    <div flex="45" id="map_canvas">
-        <ui-gmap-google-map
-            center="ctrl.map.center"
-            options="ctrl.map.options"
-            zoom="ctrl.map.zoom">
+  </md-toolbar>
+  <md-content style="max-height: 600px; overflow-y: auto;">
+    <!-- Search -->
+    <div layout="column" ng-if="ctrl.typePage=='search_places'">
+      <md-tabs md-dynamic-height md-border-bottom>
 
-        </ui-gmap-google-map>
+        <md-tab label="Local search">
+          <md-content class="md-padding">
+            <h2>Nearby</h2>
+            <md-select ng-model="placeType">
+              <md-option ng-value="''">All</md-option>
+              <md-option ng-repeat="pt in ctrl.PLACE_TYPES" ng-value="'{{pt}}'">{{pt}}</md-option>
+            </md-select>
+            <md-input-container>
+              <label>Query</label>
+              <input ng-model="ctrl.nearByQuery">
+            </md-input-container>
+            <div layout>
+              <div flex="10" layout layout-align="center center">
+                <span class="md-body-1">Radius</span>
+              </div>
+              <md-slider flex min="50" max="5000" ng-model="ctrl.radius" aria-label="blue" id="blue-slider" class>
+              </md-slider>
+              <div flex="20" layout layout-align="center center">
+                <input flex type="number" ng-model="ctrl.radius" aria-label="red" aria-controls="red-slider">
+              </div>
+            </div>
+            <nav layout="row">
+              <md-button ng-click="ctrl.searchPlaces([placeType], ctrl.nearByQuery, ctrl.radius)"
+                         class="md-primary md-raised">Search
+              </md-button>
+              <md-button ng-click="ctrl.clearSearchResults()" class="md-primary md-raised">Clear Results</md-button>
+              <md-button id="more">Load more results</md-button>
+            </nav>
+          </md-content>
+        </md-tab>
 
+
+        <md-tab label="Global search">
+          <md-content ng-init="ctrl.initSearch()" class="md-padding">
+              <input id="search-box" style="padding:10px;" ng-model="ctrl.query">
+          </md-content>
+        </md-tab>
+
+
+      </md-tabs>
     </div>
+    <md-list>
+      <h2>{{filtered.length}} items {{ctrl.items.length}}</h2>
+      <md-list-item id="item{{it.key}}" layout="column" layout-align="center left"
+                    ng-repeat="it in filtered = (ctrl.items | filter: ctrl.typePage)  track by $index">
+
+        <div layout="column" flex>
+
+          <div layout="row" style="margin: 3px;border-bottom: 1px solid #e4e4e4;">
+            <div ng-if="it.image">
+              <img class="md-avatar" ng-src="{{it.image}}"/>
+            </div>
+            <h2 flex class="md-title">
+              <md-icon ng-if="it.type=='people'" md-menu-align-target
+                       style="margin: auto 3px auto 0;"><i
+                  class="material-icons-extended">account_box</i></md-icon>
+              <md-icon ng-if="it.type=='places'" md-menu-align-target
+                       style="margin: auto 3px auto 0;"><i
+                  class="material-icons-extended">place</i></md-icon>
+              <md-icon ng-if="it.type=='events'" md-menu-align-target
+                       style="margin: auto 3px auto 0;"><i
+                  class="material-icons-extended">event</i></md-icon>
+              {{it.name}}
+            </h2>
+
+            <md-menu md-position-mode="target-right target">
+              <md-button aria-label="Open phone interactions menu" class="md-icon-button"
+                         ng-click="ctrl.openMenu($mdOpenMenu, $event)">
+                <md-icon
+                    style="margin: auto 3px auto 0;">
+                  <i class="material-icons-extended">more_vert</i>
+                </md-icon>
+              </md-button>
+              <md-menu-content width="4">
+                <md-menu-item ng-if="it.coords">
+                  <md-button ng-click="ctrl.dragItem(it)">
+                    <md-icon
+                        style="margin: auto 3px auto 0;">
+                      <i class="material-icons-extended">place</i>
+                    </md-icon>
+                    Drag pin
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item ng-if="it.coords">
+                  <md-button ng-click="ctrl.startFromItem(it)">
+                    <md-icon
+                        style="margin: auto 3px auto 0;">
+                      <i class="material-icons-extended">place</i>
+                    </md-icon>
+                    Place
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item ng-if="it.coords">
+                  <md-button ng-click="ctrl.calculateDistance(it)">
+                    <md-icon style="margin: auto 3px auto 0;">
+                      <i class="material-icons-extended">directions</i>
+                    </md-icon>
+                    Directions
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item ng-if="it.coords">
+                  <md-button ng-click="ctrl.centerToMap(it)">
+                    <md-icon
+                        style="margin: auto 3px auto 0;"><i
+                        class="material-icons-extended">map</i>
+                    </md-icon>
+                    Map
+                  </md-button>
+                </md-menu-item>
+                <md-menu-divider></md-menu-divider>
+                <md-menu-item ng-if="it.key">
+                  <md-button
+                      ng-click="ctrl.editItem(it, $event, $index)">
+                    <md-icon
+                        style="margin: auto 3px auto 0;"><i
+                        class="material-icons-extended">edit</i>
+                    </md-icon>
+                    Edit
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                  <md-button ng-click="ctrl.addItem(it)">
+                    <md-icon
+                        style="margin: auto 3px auto 0;"><i
+                        class="material-icons-extended">add</i>
+                    </md-icon>
+                    Add
+                  </md-button>
+                </md-menu-item>
+              </md-menu-content>
+            </md-menu>
+          </div>
+          <div>
+            <md-progress-linear ng-if="it.percent.fact"
+                                ng-model="ctrl.determinate"
+                                value="{{it.percent.fact}}"></md-progress-linear>
+          </div>
+          <div layout="column">
+            <div ng-if="it.content" layout-margin>{{it.content}}</div>
+            <div ng-if="it.formatted_phone_number" layout-margin>{{it.formatted_phone_number}}</div>
+            <div ng-if="it.formatted_address" layout-margin>{{it.formatted_address}}</div>
+          </div>
+        </div>
+      </md-list-item>
+    </md-list>
+  </md-content>
+</div>
+<div id="map_canvas">
+
 </div>

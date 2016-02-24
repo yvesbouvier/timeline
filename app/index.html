@@ -17,18 +17,19 @@
           display: none !important;
         }
     </style>
+    <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyAFJjUaUQy574SfQ_i4RBwdloDVhjxOU5I&sensor=false&extension=.js&signed_in=true&libraries=visualization,places">
+    </script>
     <script src="./bower_components/angular/angular.js"></script>
     <script src="./bower_components/angular-route/angular-route.js"></script>
     <script src="./bower_components/angular-animate/angular-animate.js"></script>
     <script src="./bower_components/angular-aria/angular-aria.js"></script>
-
     <script src='./bower_components/lodash/lodash.min.js'></script>
     <script src='./bower_components/angular-simple-logger/dist/angular-simple-logger.js'></script>
-    <script src='./bower_components/angular-google-maps/dist/angular-google-maps.js'></script>
     <script type="text/javascript" src="./bower_components/angular-material/angular-material.js"></script>
     <script src="./src/app.js"></script>
     <script src="src/items/Item.js"></script>
     <script src="src/items/ItemController.js"></script>
+    <script src="src/items/ItemDialogController.js"></script>
     <script src="src/items/ItemService.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons+Extended" rel="stylesheet">
@@ -74,36 +75,14 @@
         overflow-y: auto;
       }
 
+      #map_canvas {
+        background-color: black;
+      }
 
 
     </style>
   </head>
 
-  <body ng-app="starterApp" layout="row" ng-cloak>
-  <md-sidenav class="site-sidenav md-sidenav-left md-whiteframe-z2"
-              md-component-id="left" layout="column">
-    <md-toolbar class="md-whiteframe-z1">
-      <h1>TimelineApp</h1>
-    </md-toolbar>
-    <md-subheader class="md-no-sticky">Type</md-subheader>
-    <md-list>
-      <md-list-item>
-        <a href="#item/people">People</a>
-      </md-list-item>
-      <md-list-item>
-        <a href="#item/places">Places</a>
-      </md-list-item>
-      <md-list-item>
-        <a href="#item/search_places">Place Search</a>
-      </md-list-item>
-      <md-list-item>
-        <a href="#item/events">Events</a>
-      </md-list-item>
-      <md-list-item>
-        <a href="#">Home</a>
-      </md-list-item>
-    </md-list>
-  </md-sidenav>
-    <div ng-view style="width:100%"></div>
+  <body ng-view ng-app="starterApp" layout="row" ng-cloak>
   </body>
 </html>
